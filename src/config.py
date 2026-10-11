@@ -27,7 +27,7 @@ class Settings(BaseModel):
     # Pinecone
     pinecone_api_key: str = os.getenv("PINECONE_API_KEY", "")
     pinecone_index_name: str = os.getenv(
-        "PINECONE_INDEX_NAME", "cloudops-sentinel-openai-self-rag"
+        "PINECONE_INDEX_NAME", "runbook-copilot"
     )
     pinecone_namespace: str = os.getenv("PINECONE_NAMESPACE", "incident-runbooks")
     pinecone_cloud: str = os.getenv("PINECONE_CLOUD", "aws")

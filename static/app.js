@@ -1,7 +1,7 @@
 // --- Conversation id (the key to the server's SQLite memory) -------------------------
 // Every request sends this thread_id. The backend saves/loads conversation memory under it,
 // so keeping the same id in localStorage means a page refresh continues the same incident.
-const THREAD_KEY = 'cloudops_sentinel_thread_id';
+const THREAD_KEY = 'runbook_copilot_thread_id';
 // crypto.randomUUID only exists in secure contexts (HTTPS/localhost); fall back for plain-HTTP deployments.
 function newThreadId() {
     const id = crypto.randomUUID ? crypto.randomUUID()
@@ -28,8 +28,8 @@ renderSession();
 function esc(s = '') { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c])); }
 function addMessage(role, html, meta = '') {
     const el = document.createElement('div'); el.className = `message ${role}`;
-    const avatar = role === 'assistant' ? '<div class="avatar">S</div>' : '';
-    const label = role === 'assistant' ? 'CLOUDOPS SENTINEL' : 'ON-CALL ENGINEER';
+    const avatar = role === 'assistant' ? '<div class="avatar">R</div>' : '';
+    const label = role === 'assistant' ? 'RUNBOOK COPILOT' : 'ON-CALL ENGINEER';
     el.innerHTML = `${avatar}<div class="message-body"><div class="message-label">${label}</div><div class="bubble">${html}</div>${meta}</div>`;
     messages.appendChild(el); messages.scrollTop = messages.scrollHeight; return el;
 }
@@ -96,7 +96,7 @@ newSessionBtn?.addEventListener('click', () => {
     threadId = newThreadId();
     localStorage.setItem(THREAD_KEY, threadId);
     renderSession();
-    messages.innerHTML = `<div class="message assistant"><div class="avatar">S</div><div class="message-body"><div class="message-label">CLOUDOPS SENTINEL</div><div class="bubble intro">New incident memory session started. Describe the production issue and I’ll build context across your follow-up questions.</div></div></div>`;
+    messages.innerHTML = `<div class="message assistant"><div class="avatar">R</div><div class="message-body"><div class="message-label">RUNBOOK COPILOT</div><div class="bubble intro">New incident memory session started. Describe the production issue and I’ll build context across your follow-up questions.</div></div></div>`;
     starters.style.display = 'flex';
     q.value = ''; q.focus();
 });

@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# CloudOps Sentinel (runbook-copilot) container image
+# Runbook Copilot container image
 #
 # Build:  docker build -t runbook-copilot .
 # Run:    docker compose up -d --build        (recommended, see docker-compose.yml)

@@ -1,5 +1,5 @@
 """
-FastAPI entry point for CloudOps Sentinel.
+FastAPI entry point for Runbook Copilot.
 
 FastAPI in one paragraph: you create an `app` object, then decorate normal Python
 functions with `@app.get(...)` / `@app.post(...)`. Each decorated function becomes
@@ -35,7 +35,7 @@ UPLOADS.mkdir(exist_ok=True)
 
 # The application object. uvicorn looks this up via "app:app" (file app.py, variable app).
 app = FastAPI(
-    title="CloudOps Sentinel — Enterprise Incident Response Self-RAG Copilot",
+    title="Runbook Copilot — Self-RAG Incident-Response Assistant",
     version="2.0.0",
     description="Self-RAG copilot for cloud operations, production troubleshooting, and incident-response runbooks.",
 )
@@ -60,7 +60,7 @@ def home(request: Request):
 # GET /api/health -> simple liveness check (used by the Docker HEALTHCHECK).
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "service": "cloudops-sentinel-self-rag"}
+    return {"status": "ok", "service": "runbook-copilot"}
 
 
 # POST /api/chat

@@ -16,7 +16,7 @@ def main():
         raise RuntimeError("PINECONE_API_KEY is missing. Add it to your .env file.")
 
     print("=" * 68)
-    print("CloudOps Sentinel - Pinecone Knowledge Base Ingestion")
+    print("Runbook Copilot - Pinecone Knowledge Base Ingestion")
     print("=" * 68)
     print(f"OpenAI embedding model : {s.embedding_model}")
     print(f"Embedding dimension    : {s.embedding_dimension}")

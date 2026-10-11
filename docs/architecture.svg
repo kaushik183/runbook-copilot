@@ -1,152 +1,196 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 940" width="960" height="940" role="img" aria-labelledby="title desc">
-  <title id="title">Self-RAG workflow</title>
-  <desc id="desc">LangGraph nodes of runbook-copilot: contextualize, decide_retrieval, retrieve, grade, generate, support, revise, usefulness, commit_memory, with retry routing to rewrite_internal, rewrite_web, web_search and no_answer.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 1080" width="1060" height="1080" role="img" aria-labelledby="title desc">
+  <title id="title">Runbook Copilot: Self-RAG workflow</title>
+  <desc id="desc">Main path: understand the question using chat memory, decide whether evidence is needed, search the runbooks, keep relevant chunks, write the answer, check it is backed by evidence and answers the question, then save to memory. Weak evidence triggers retries: rephrase and search again, then search the internet, then give up.</desc>
   <style>
     .bg { fill: #ffffff; stroke: #e4e7eb; }
-    .node { fill: #f8fafc; stroke: #9aa5b1; stroke-width: 1.25; }
+    .band { fill: #f6f8fa; }
+    .band-label { font: 600 11px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; letter-spacing: 1.2px; fill: #7b8794; }
+    .node { fill: #ffffff; stroke: #9aa5b1; stroke-width: 1.25; }
     .mem { fill: #f0faf4; stroke: #2f855a; stroke-width: 1.75; }
-    .web { fill: #fdf8ee; stroke: #b7791f; stroke-width: 1.75; }
+    .retry { fill: #fdf8ee; stroke: #b7791f; stroke-width: 1.5; }
     .pill { fill: #1f2933; }
-    .name.pill-text { fill: #ffffff; }
-    .diamond { fill: #ffffff; stroke: #9aa5b1; stroke-width: 1.25; }
-    .name { font: 500 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #1f2933; text-anchor: middle; }
-    .label { font: 11.5px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #52606d; }
+    .title { font: 600 14px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2933; text-anchor: middle; }
+    .sub { font: 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #7b8794; text-anchor: middle; }
+    .pill-text { font: 600 12px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; letter-spacing: 1px; fill: #ffffff; text-anchor: middle; }
+    .badge { fill: #1f2933; }
+    .badge-text { font: 600 11px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #ffffff; text-anchor: middle; }
+    .yn { font: 600 12px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #52606d; }
+    .retry-text { font: 12px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #1f2933; }
+    .retry-title { font: 600 13px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #8d5b0f; }
     .legend { font: 12px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #52606d; }
-    .edge { fill: none; stroke: #616e7c; stroke-width: 1.5; }
-    .cond { stroke-dasharray: 5 4; }
-    .head { fill: #616e7c; }
+    .main { fill: none; stroke: #3e4c59; stroke-width: 2.25; }
+    .side { fill: none; stroke: #7b8794; stroke-width: 1.5; }
+    .amber { fill: none; stroke: #b7791f; stroke-width: 1.75; }
+    .head-main { fill: #3e4c59; }
+    .head-side { fill: #7b8794; }
+    .head-amber { fill: #b7791f; }
     @media (prefers-color-scheme: dark) {
       .bg { fill: #0d1117; stroke: #30363d; }
+      .band { fill: #12171e; }
+      .band-label { fill: #6e7681; }
       .node { fill: #161b22; stroke: #57606a; }
       .mem { fill: #0f2a1c; stroke: #3fb950; }
-      .web { fill: #2b2111; stroke: #d29922; }
-      .pill { fill: #e6edf3; }
-      .diamond { fill: #161b22; stroke: #57606a; }
-      .name { fill: #e6edf3; }
-      .name.pill-text { fill: #0d1117; }
-      .label, .legend { fill: #8b949e; }
-      .edge { stroke: #8b949e; }
-      .head { fill: #8b949e; }
+      .retry { fill: #2b2111; stroke: #d29922; }
+      .pill, .badge { fill: #e6edf3; }
+      .pill-text, .badge-text { fill: #0d1117; }
+      .title, .retry-text { fill: #e6edf3; }
+      .sub { fill: #8b949e; }
+      .yn, .legend { fill: #8b949e; }
+      .retry-title { fill: #e3b341; }
+      .main { stroke: #c9d1d9; }
+      .side { stroke: #8b949e; }
+      .amber { stroke: #d29922; }
+      .head-main { fill: #c9d1d9; }
+      .head-side { fill: #8b949e; }
+      .head-amber { fill: #d29922; }
     }
   </style>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path class="head" d="M0,0 L10,5 L0,10 z"/>
-    </marker>
+    <marker id="a-main" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path class="head-main" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="a-side" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head-side" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="a-amber" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="head-amber" d="M0,0 L10,5 L0,10 z"/></marker>
   </defs>
 
-  <rect class="bg" x="0.5" y="0.5" width="959" height="939" rx="12"/>
+  <rect class="bg" x="0.5" y="0.5" width="1059" height="1079" rx="12"/>
 
-  <!-- ===== Edges: always (solid) ===== -->
-  <g class="edge" marker-end="url(#arrow)">
-    <path d="M480,56 V95"/>                  <!-- START -> contextualize -->
-    <path d="M480,135 V175"/>                <!-- contextualize -> decide_retrieval -->
-    <path d="M480,305 V365"/>                <!-- retrieve -> grade -->
-    <path d="M480,500 V545"/>                <!-- generate -> support -->
-    <path d="M480,790 V834"/>                <!-- commit_memory -> END -->
-    <path d="M665,285 H575"/>                <!-- rewrite_internal -> retrieve -->
-    <path d="M665,378 H575"/>                <!-- web_search -> grade -->
-    <path d="M750,455 V405"/>                <!-- rewrite_web -> web_search -->
-    <path d="M245,545 V522 H420 V545"/>      <!-- revise -> support -->
-    <path d="M130,305 V770 H385"/>           <!-- direct -> commit_memory -->
-    <path d="M665,770 H575"/>                <!-- no_answer -> commit_memory -->
+  <!-- ===== Stage bands ===== -->
+  <rect class="band" x="12" y="78" width="1036" height="190" rx="8"/>
+  <rect class="band" x="12" y="284" width="1036" height="218" rx="8"/>
+  <rect class="band" x="12" y="526" width="1036" height="312" rx="8"/>
+  <rect class="band" x="12" y="862" width="1036" height="102" rx="8"/>
+  <text class="band-label" x="355" y="96" text-anchor="end">1 · UNDERSTAND</text>
+  <text class="band-label" x="355" y="302" text-anchor="end">2 · FIND EVIDENCE</text>
+  <text class="band-label" x="355" y="544" text-anchor="end">3 · WRITE &amp; CHECK</text>
+  <text class="band-label" x="355" y="880" text-anchor="end">4 · REMEMBER</text>
+
+  <!-- ===== Main path (thick) ===== -->
+  <g class="main" marker-end="url(#a-main)">
+    <path d="M500,56 V103"/>
+    <path d="M500,157 V198"/>
+    <path d="M500,252 V313"/>
+    <path d="M500,367 V423"/>
+    <path d="M500,477 V563"/>
+    <path d="M500,617 V663"/>
+    <path d="M500,717 V763"/>
+    <path d="M500,817 V893"/>
+    <path d="M500,947 V984"/>
   </g>
+  <text class="yn" x="510" y="288">yes</text>
+  <text class="yn" x="510" y="524">yes</text>
+  <text class="yn" x="510" y="745">yes</text>
+  <text class="yn" x="510" y="860">yes</text>
 
-  <!-- ===== Edges: decisions made by route_after_* (dashed) ===== -->
-  <g class="edge cond" marker-end="url(#arrow)">
-    <path d="M385,195 H130 V265"/>           <!-- decide_retrieval -> direct -->
-    <path d="M480,215 V265"/>                <!-- decide_retrieval -> retrieve -->
-    <path d="M480,405 V460"/>                <!-- grade -> generate -->
-    <path d="M480,585 V635"/>                <!-- support -> usefulness -->
-    <path d="M480,675 V750"/>                <!-- usefulness -> commit_memory -->
-    <path d="M385,565 H295"/>                <!-- support -> revise -->
-    <path d="M620,565 H716"/>                <!-- shared retry router -->
-    <path d="M750,531 V495"/>                <!-- retry -> rewrite_web -->
-    <path d="M784,565 H900 V285 H835"/>      <!-- retry -> rewrite_internal -->
-    <path d="M750,599 V750"/>                <!-- retry -> no_answer -->
+  <!-- ===== Side paths ===== -->
+  <g class="side" marker-end="url(#a-side)">
+    <path d="M370,225 H140 V313"/>        <!-- Need evidence? no -> Answer directly -->
+    <path d="M70,367 V920 H370"/>          <!-- Answer directly -> Save to memory -->
+    <path d="M370,690 H315"/>              <!-- Backed? no -> Fix weak claims -->
+    <path d="M240,663 V640 H440 V663"/>    <!-- Fix weak claims -> check again -->
+    <path d="M735,920 H630"/>              <!-- Not enough evidence -> Save to memory -->
   </g>
-  <g class="edge cond">
-    <path d="M575,394 H620 V565"/>           <!-- grade: nothing relevant -->
-    <path d="M575,655 H620 V565"/>           <!-- usefulness: not useful -->
+  <text class="yn" x="255" y="217" text-anchor="middle">no</text>
+  <text class="yn" x="342" y="682" text-anchor="middle">no</text>
+
+  <!-- ===== Retry paths (amber) ===== -->
+  <g class="amber" marker-end="url(#a-amber)">
+    <path d="M630,462 H690 V580 H735"/>    <!-- Anything relevant? no -> Retry -->
+    <path d="M630,790 H705 V610 H735"/>    <!-- Answers the question? no -> Retry -->
+    <path d="M965,567 H1010 V340 H965"/>   <!-- (1) rephrase & search again -->
+    <path d="M850,545 V477"/>              <!-- (2) search the internet -->
+    <path d="M850,640 V893"/>              <!-- (3) give up -->
+    <path d="M735,340 H630"/>              <!-- rephrased query -> Search the runbooks -->
+    <path d="M735,438 H630"/>              <!-- web results -> Anything relevant? -->
   </g>
-  <circle class="head" cx="620" cy="565" r="3"/>
+  <text class="yn" x="698" y="528">no</text>
+  <text class="yn" x="713" y="706">no</text>
+  <text class="yn" x="1018" y="458">①</text>
+  <text class="yn" x="858" y="516">②</text>
+  <text class="yn" x="858" y="770">③</text>
 
-  <!-- ===== Edge labels ===== -->
-  <text class="label" x="258" y="187" text-anchor="middle">no</text>
-  <text class="label" x="490" y="244">yes</text>
-  <text class="label" x="490" y="437">relevant</text>
-  <text class="label" x="490" y="614">supported</text>
-  <text class="label" x="490" y="716">useful</text>
-  <text class="label" x="340" y="557" text-anchor="middle">unsupported</text>
-  <text class="label" x="628" y="434">none relevant</text>
-  <text class="label" x="628" y="630">not useful</text>
-  <text class="label" x="758" y="518">web</text>
-  <text class="label" x="893" y="430" text-anchor="end">internal</text>
-  <text class="label" x="758" y="680">give up</text>
+  <!-- ===== Nodes: main path ===== -->
+  <rect class="pill" x="450" y="24" width="100" height="32" rx="16"/>
+  <text class="pill-text" x="500" y="44">QUESTION</text>
 
-  <!-- ===== Nodes ===== -->
-  <rect class="pill" x="430" y="24" width="100" height="32" rx="16"/>
-  <text class="name pill-text" x="480" y="45">START</text>
+  <rect class="mem" x="370" y="103" width="260" height="54" rx="9"/>
+  <circle class="badge" cx="393" cy="130" r="10"/><text class="badge-text" x="393" y="134">1</text>
+  <text class="title" x="510" y="127">Understand the question</text>
+  <text class="sub" x="510" y="145">contextualize · chat memory</text>
 
-  <rect class="mem" x="385" y="95" width="190" height="40" rx="8"/>
-  <text class="name" x="480" y="120">contextualize</text>
+  <rect class="node" x="370" y="198" width="260" height="54" rx="9"/>
+  <circle class="badge" cx="393" cy="225" r="10"/><text class="badge-text" x="393" y="229">2</text>
+  <text class="title" x="510" y="222">Need evidence?</text>
+  <text class="sub" x="510" y="240">decide_retrieval</text>
 
-  <rect class="node" x="385" y="175" width="190" height="40" rx="8"/>
-  <text class="name" x="480" y="200">decide_retrieval</text>
+  <rect class="node" x="370" y="313" width="260" height="54" rx="9"/>
+  <circle class="badge" cx="393" cy="340" r="10"/><text class="badge-text" x="393" y="344">3</text>
+  <text class="title" x="510" y="337">Search the runbooks</text>
+  <text class="sub" x="510" y="355">retrieve · Pinecone</text>
 
-  <rect class="node" x="55" y="265" width="150" height="40" rx="8"/>
-  <text class="name" x="130" y="290">direct</text>
+  <rect class="node" x="370" y="423" width="260" height="54" rx="9"/>
+  <circle class="badge" cx="393" cy="450" r="10"/><text class="badge-text" x="393" y="454">4</text>
+  <text class="title" x="510" y="447">Anything relevant?</text>
+  <text class="sub" x="510" y="465">grade · LLM checks chunks</text>
 
-  <rect class="node" x="385" y="265" width="190" height="40" rx="8"/>
-  <text class="name" x="480" y="290">retrieve</text>
+  <rect class="node" x="370" y="563" width="260" height="54" rx="9"/>
+  <circle class="badge" cx="393" cy="590" r="10"/><text class="badge-text" x="393" y="594">5</text>
+  <text class="title" x="510" y="587">Write the answer</text>
+  <text class="sub" x="510" y="605">generate · evidence only</text>
 
-  <rect class="node" x="665" y="265" width="170" height="40" rx="8"/>
-  <text class="name" x="750" y="290">rewrite_internal</text>
+  <rect class="node" x="370" y="663" width="260" height="54" rx="9"/>
+  <circle class="badge" cx="393" cy="690" r="10"/><text class="badge-text" x="393" y="694">6</text>
+  <text class="title" x="510" y="687">Backed by evidence?</text>
+  <text class="sub" x="510" y="705">support · IsSUP</text>
 
-  <rect class="node" x="385" y="365" width="190" height="40" rx="8"/>
-  <text class="name" x="480" y="390">grade</text>
+  <rect class="node" x="370" y="763" width="260" height="54" rx="9"/>
+  <circle class="badge" cx="393" cy="790" r="10"/><text class="badge-text" x="393" y="794">7</text>
+  <text class="title" x="510" y="787">Answers the question?</text>
+  <text class="sub" x="510" y="805">usefulness · IsUSE</text>
 
-  <rect class="web" x="665" y="365" width="170" height="40" rx="8"/>
-  <text class="name" x="750" y="390">web_search</text>
+  <rect class="mem" x="370" y="893" width="260" height="54" rx="9"/>
+  <circle class="badge" cx="393" cy="920" r="10"/><text class="badge-text" x="393" y="924">8</text>
+  <text class="title" x="510" y="917">Save to memory</text>
+  <text class="sub" x="510" y="935">commit_memory · SQLite</text>
 
-  <rect class="web" x="665" y="455" width="170" height="40" rx="8"/>
-  <text class="name" x="750" y="480">rewrite_web</text>
+  <rect class="pill" x="450" y="984" width="100" height="32" rx="16"/>
+  <text class="pill-text" x="500" y="1004">ANSWER</text>
 
-  <rect class="node" x="385" y="460" width="190" height="40" rx="8"/>
-  <text class="name" x="480" y="485">generate</text>
+  <!-- ===== Nodes: left ===== -->
+  <rect class="node" x="40" y="313" width="200" height="54" rx="9"/>
+  <text class="title" x="140" y="337">Answer directly</text>
+  <text class="sub" x="140" y="355">direct · general knowledge</text>
 
-  <rect class="node" x="195" y="545" width="100" height="40" rx="8"/>
-  <text class="name" x="245" y="570">revise</text>
+  <rect class="node" x="165" y="663" width="150" height="54" rx="9"/>
+  <text class="title" x="240" y="687">Fix weak claims</text>
+  <text class="sub" x="240" y="705">revise · up to 2×</text>
 
-  <rect class="node" x="385" y="545" width="190" height="40" rx="8"/>
-  <text class="name" x="480" y="570">support</text>
+  <!-- ===== Nodes: right (retries) ===== -->
+  <rect class="retry" x="735" y="313" width="230" height="54" rx="9"/>
+  <text class="title" x="850" y="337">Rephrase, search again</text>
+  <text class="sub" x="850" y="355">rewrite_internal</text>
 
-  <polygon class="diamond" points="750,531 784,565 750,599 716,565"/>
-  <text class="label" x="750" y="569" text-anchor="middle">retry?</text>
+  <rect class="retry" x="735" y="423" width="230" height="54" rx="9"/>
+  <text class="title" x="850" y="447">Search the internet</text>
+  <text class="sub" x="850" y="465">web_search · Tavily</text>
 
-  <rect class="node" x="385" y="635" width="190" height="40" rx="8"/>
-  <text class="name" x="480" y="660">usefulness</text>
+  <rect class="retry" x="735" y="545" width="230" height="95" rx="9"/>
+  <text class="retry-title" x="751" y="568">Retry, in this order:</text>
+  <text class="retry-text" x="751" y="590">① rephrase &amp; search runbooks</text>
+  <text class="retry-text" x="751" y="609">② search the internet</text>
+  <text class="retry-text" x="751" y="628">③ give up</text>
 
-  <rect class="mem" x="385" y="750" width="190" height="40" rx="8"/>
-  <text class="name" x="480" y="775">commit_memory</text>
-
-  <rect class="node" x="665" y="750" width="170" height="40" rx="8"/>
-  <text class="name" x="750" y="775">no_answer</text>
-
-  <rect class="pill" x="430" y="834" width="100" height="32" rx="16"/>
-  <text class="name pill-text" x="480" y="855">END</text>
+  <rect class="node" x="735" y="893" width="230" height="54" rx="9"/>
+  <text class="title" x="850" y="917">Not enough evidence</text>
+  <text class="sub" x="850" y="935">no_answer</text>
 
   <!-- ===== Legend ===== -->
-  <g transform="translate(40,906)">
-    <path class="edge" d="M0,0 H34"/>
-    <text class="legend" x="44" y="4">always</text>
-    <path class="edge cond" d="M110,0 H144"/>
-    <text class="legend" x="154" y="4">decision</text>
-    <rect class="mem" x="236" y="-8" width="26" height="16" rx="4"/>
-    <text class="legend" x="272" y="4">memory (SQLite)</text>
-    <rect class="web" x="398" y="-8" width="26" height="16" rx="4"/>
-    <text class="legend" x="434" y="4">web fallback (Tavily)</text>
-    <polygon class="diamond" points="584,-9 593,0 584,9 575,0"/>
-    <text class="legend" x="602" y="4">retry: internal first, then web, then give up</text>
+  <g transform="translate(40,1048)">
+    <path class="main" d="M0,0 H34"/>
+    <text class="legend" x="44" y="4">main path (steps 1–8)</text>
+    <path class="side" d="M200,0 H234"/>
+    <text class="legend" x="244" y="4">shortcut / fix</text>
+    <path class="amber" d="M350,0 H384"/>
+    <text class="legend" x="394" y="4">retry when evidence is weak</text>
+    <rect class="mem" x="580" y="-8" width="26" height="16" rx="4"/>
+    <text class="legend" x="616" y="4">reads / writes SQLite memory</text>
   </g>
 </svg>

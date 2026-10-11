@@ -1,4 +1,4 @@
-# runbook-copilot — CloudOps Sentinel
+# Runbook Copilot
 
 **A Self-RAG incident-response copilot for cloud operations.**
 
@@ -140,7 +140,7 @@ uvicorn app:app --reload
 
 ```python
 # app.py
-app = FastAPI(title="CloudOps Sentinel — …", version="2.0.0", …)
+app = FastAPI(title="Runbook Copilot — …", version="2.0.0", …)
 ```
 
 Everything hangs off this object. The title and version show up on the auto-generated docs page.
@@ -368,16 +368,22 @@ The checkpoint data itself is stored as serialized blobs (LangGraph's format), s
 
 ## 6. The Self-RAG workflow (LangGraph)
 
-The graph built in `build_graph()` (`src/self_rag.py`). Box names are the real node names in the code.
+The graph built in `build_graph()` (`src/self_rag.py`). Each box shows what the step does in plain English, with its node name in the code underneath.
 
-<p align="center"><img src="docs/architecture.svg" alt="Self-RAG workflow: contextualize, decide_retrieval, retrieve, grade, generate, support, revise, usefulness, commit_memory, with retry routing to rewrite_internal, rewrite_web, web_search and no_answer" width="860"></p>
+<p align="center"><img src="docs/architecture.svg" alt="Runbook Copilot Self-RAG workflow: understand the question, decide whether evidence is needed, search the runbooks, keep relevant chunks, write the answer, check it is backed by evidence and answers the question, save to memory; weak evidence triggers retries" width="860"></p>
 
 How to read it:
 
-- **Solid arrow:** always happens next (`add_edge`).
-- **Dashed arrow:** a decision made by a `route_after_*` function (`add_conditional_edges`).
-- **The `retry?` diamond** isn't a node. It's the shared rule inside `route_after_relevance` and `route_after_usefulness`: try `rewrite_internal` first (up to `MAX_RETRIEVAL_REWRITES`), then `rewrite_web` (up to `MAX_WEB_REWRITES`), then `no_answer`.
-- **Green:** memory (SQLite). **Amber:** web fallback (Tavily). Everything else is the classic Self-RAG loop.
+- **Follow the numbers 1 → 8 down the middle.** That's the normal path for a question the runbooks can answer.
+- **Questions in boxes are decisions.** "yes" continues down the main path, and "no" branches off.
+- **Grey side paths.** General questions skip the search (*Answer directly*). An answer with unsupported claims gets fixed (*Fix weak claims*, up to 2 times), then is checked again.
+- **Amber retry paths.** When nothing relevant is found (step 4), or the answer doesn't address the question (step 7), the assistant retries in order:
+  1. rephrase the query and search the runbooks again (up to `MAX_RETRIEVAL_REWRITES`)
+  2. search the internet with Tavily (up to `MAX_WEB_REWRITES`)
+  3. give up and reply "not enough evidence"
+
+  This rule lives in `route_after_relevance` and `route_after_usefulness`. *Search the internet* covers two nodes, `rewrite_web` followed by `web_search`.
+- **Green steps use the SQLite memory.** Step 1 reads earlier turns, and step 8 saves this turn.
 
 ### How this differs from a basic Self-RAG graph
 
@@ -589,7 +595,7 @@ All settings come from `.env` (see `.env.example`) and are read in `src/config.p
 | `LLM_TIMEOUT_SECONDS` | no | `120` | Max wait for one LLM call before it's retried (max 2 retries) |
 | `EMBEDDING_MODEL` | no | `text-embedding-3-large` | Embedding model (ingestion **and** retrieval) |
 | `EMBEDDING_DIMENSION` | no | `3072` | Must match the model **and** the Pinecone index |
-| `PINECONE_INDEX_NAME` | no | `cloudops-sentinel-openai-self-rag` | Index name (created automatically if missing) |
+| `PINECONE_INDEX_NAME` | no | `runbook-copilot` | Index name (created automatically if missing) |
 | `PINECONE_NAMESPACE` | no | `incident-runbooks` | Namespace inside the index |
 | `PINECONE_CLOUD` / `PINECONE_REGION` | no | `aws` / `us-east-1` | Where a new serverless index is created |
 | `TOP_K` | no | `5` | Chunks retrieved per search |
