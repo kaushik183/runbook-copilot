@@ -22,7 +22,7 @@ The backend is **FastAPI**, the workflow is a **LangGraph** state machine, and m
 3. [Project structure](#3-project-structure)
 4. [FastAPI, explained with this code](#4-fastapi-explained-with-this-code)
 5. [SQLite memory, explained with this code](#5-sqlite-memory-explained-with-this-code)
-6. [The Self-RAG workflow (LangGraph)](#6-the-self-rag-workflow-langgraph)
+6. [The Self-RAG workflow (LangGraph)](#6-the-self-rag-workflow-langgraph) · [The knowledge base](#6b-the-knowledge-base-documents)
 7. [Run it locally](#7-run-it-locally)
 8. [Run it with Docker](#8-run-it-with-docker)
 9. [Deploy to an Oracle Cloud VM](#9-deploy-to-an-oracle-cloud-vm) · [Deploy to Render](#9b-deploy-to-render)
@@ -48,6 +48,7 @@ The backend is **FastAPI**, the workflow is a **LangGraph** state machine, and m
 | **Fix:** suggested prompts / Send dead after deployment | `crypto.randomUUID()` only exists on HTTPS or `localhost`. On a plain-HTTP server it threw an error on line 3 of `app.js`, so **no buttons were wired up**. It now falls back to `crypto.getRandomValues()`, which works everywhere | `static/app.js` → `newThreadId()` |
 | **Fix:** ingestion edge cases | `ingest_file` returned from inside the loop, and returned `None` for an empty file (crashing uploads/bulk ingest). DOCX metadata stored the text `"<class 'pathlib.Path'>"` as the source instead of the file path | `src/ingestion.py` |
 | **Fix:** chat request could hang for ~30 min | `ChatOpenAI` had no timeout, so one stalled OpenAI call blocked the request (seen during Docker testing). Now `LLM_TIMEOUT_SECONDS` (120 s) with 2 retries | `src/self_rag.py` → `_llm()` |
+| **Knowledge base: 100 documents** | 97 new fictional documents for one consistent (made-up) company: 20 service runbooks, 20 infrastructure runbooks, 10 database/data runbooks, 15 SOPs, 15 postmortems, 6 alert playbooks, 4 observability guides, 7 architecture notes, 3 security/cost runbooks. 231 chunks in Pinecone. **No code changes** were needed | `documents/` |
 | Port | `python app.py` now uses port **8000**, the same as `uvicorn` and Docker (was 8080) | `app.py` |
 | Docker | `Dockerfile`, `.dockerignore`, `docker-compose.yml` with volumes so memory and uploads survive rebuilds, health check | repo root |
 | Render | `render.yaml` Blueprint: Docker web service, health check, secrets entered in the dashboard; the Dockerfile honours Render's `PORT` | repo root |
@@ -102,7 +103,7 @@ runbook-copilot/
 │   ├── ingestion.py       # Load → chunk → embed → upsert documents
 │   ├── vectorstore.py     # Embeddings + Pinecone index + namespace (single source of truth)
 │   └── self_rag.py        # LangGraph Self-RAG workflow + SQLite memory checkpointer
-├── documents/             # Starter runbooks (checkout 502s, payments CPU, rollback SOP)
+├── documents/             # 100 fictional runbooks, SOPs, postmortems, playbooks, architecture notes
 ├── templates/index.html   # The UI page
 ├── static/
 │   ├── app.js             # UI logic: thread_id, send question, upload, render answers
@@ -416,6 +417,26 @@ Each LLM step uses `OPENAI_MODEL` (default `gpt-5-mini`). Decision steps use `wi
 
 ---
 
+## 6b. The knowledge base (`documents/`)
+
+All 100 documents describe one **fictional** e-commerce company, so services, teams and tools are consistent across documents (checkout-api, payments-service, PgBouncer, Argo CD, PagerDuty, and so on). Nothing in them is real company data.
+
+| Type | Count | File name pattern | Examples |
+|---|---|---|---|
+| Service runbooks | 20 | `<service>-runbook.md` | checkout-api, cart, inventory, payment gateway, Redis, search, auth, Kafka |
+| Infrastructure runbooks | 20 | `kubernetes-*`, `rds-*`, `tls-*` … | CrashLoopBackOff, OOMKilled, node NotReady, TLS expiry, Argo CD sync failure |
+| Database & data runbooks | 10 | `postgres-*`, `redis-*`, `kafka-*` | connection pool exhaustion, replication lag, deadlocks, consumer lag |
+| SOPs | 15 | `*-sop.md` | severity levels, incident commander, canary deploys, kill switches, break-glass |
+| Postmortems | 15 | `postmortem-YYYY-MM-*.md` | expired certificate, retry-storm double charges, Black Friday Redis evictions |
+| Alert playbooks & guides | 10 | `alert-*-playbook.md`, `*-guide.md` | 5xx rate, SLO burn rate, dashboards, log search, tracing |
+| Architecture & security | 10 | `*-architecture.md`, `*-overview.md`, … | system overview, checkout flow, DR strategy, leaked credentials, DDoS |
+
+**Deliberate gaps** (so the web fallback can be demonstrated): Istio / service mesh, gRPC, GraphQL, MongoDB, GCP / Azure, JVM tuning.
+
+**Adding or changing documents:** edit files in `documents/` and run `python data_ingestion.py`. Unchanged chunks keep the same ID, so re-running only adds or updates what changed. Don't put a `README.md` inside `documents/`, because it would be ingested as a runbook. To delete a document from the index, remove its vectors in Pinecone too; deleting the file alone doesn't remove them.
+
+---
+
 ## 7. Run it locally
 
 **Prerequisites:** Python 3.11 (conda or venv), plus OpenAI, Pinecone and Tavily API keys.
@@ -442,7 +463,7 @@ Open **http://127.0.0.1:8000**. The API docs are at **http://127.0.0.1:8000/docs
 1. Click **502 after deployment**. Expect the route **Private Runbooks** and sources from `checkout-api-runbook.md`.
 2. Ask *"What should I check next if that doesn't work?"* The memory tag goes to 2 turns, and the answer continues the same incident.
 3. Upload a new runbook in **Runbook Vault**, then ask about something only it contains.
-4. Ask something no runbook covers. The route becomes **Internet Search**.
+4. Ask something no runbook covers, for example *"How do I debug Istio sidecar injection failures?"* The route becomes **Internet Search**. This path takes a few minutes, because the app first retries the runbooks before going to the web.
 5. Click **New Session**. Memory starts empty again.
 
 ---
