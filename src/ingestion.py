@@ -1,3 +1,10 @@
+"""
+Load a document -> split it into chunks -> embed the chunks -> store them in Pinecone.
+
+Used by both data_ingestion.py (bulk load of ./documents) and POST /api/upload,
+so documents are always processed the same way.
+"""
+
 from pathlib import Path
 from typing import List
 from hashlib import sha256
@@ -15,14 +22,15 @@ def __load_docx(path: Path) -> List[Document]:
     doc = DocxDocument(path)
     text = "\n".join(p.text for p in doc.paragraphs if p.text.strip())
     return [
-        Document(page_content=text, metadata={"source": str(Path), "title": path.name})
+        Document(page_content=text, metadata={"source": str(path), "title": path.name})
     ]
 
 
+# Turn a file into LangChain Document objects (text + metadata such as title/page).
 def load_file(path: Path) -> List[Document]:
     ext = path.suffix.lower()
     if ext == ".pdf":
-        docs = PyPDFLoader(file_path=path).load()
+        docs = PyPDFLoader(file_path=path).load()  # one Document per PDF page
     elif ext in {".txt", ".md"}:
         docs = TextLoader(str(path), encoding="utf-8").load()
     elif ext == ".docx":
@@ -45,20 +53,26 @@ def _stable_chunk_id(path: Path, chunk: Document, position: int) -> str:
     return f"{safe_stem}-{position}-{digest}"
 
 
+# Returns the number of chunks stored in Pinecone.
 def ingest_file(path: Path) -> int:
     docs = load_file(path)
+    # ~800-character chunks with 160 characters of overlap, so a sentence cut at a
+    # chunk boundary still appears whole in one of the two neighbouring chunks.
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=800, chunk_overlap=160, separators=["\n\n", "\n", ".", " ", ""]
     )
     chunks = splitter.split_documents(docs)
+    if not chunks:
+        return 0
 
     for i, chunk in enumerate(chunks):
         chunk.metadata["chunk_index"] = i
         chunk.metadata["knowledge_base"] = get_settings().pinecone_namespace
 
-        ids = [_stable_chunk_id(path, chunk, i) for i, chunk in enumerate(chunks)]
-        get_vector_store().add_documents(chunks, ids=ids)
-        return len(chunks)
+    ids = [_stable_chunk_id(path, chunk, i) for i, chunk in enumerate(chunks)]
+    # add_documents embeds each chunk with OpenAI and upserts it into Pinecone.
+    get_vector_store().add_documents(chunks, ids=ids)
+    return len(chunks)
 
 
 def ingest_directory(directory: Path) -> int:

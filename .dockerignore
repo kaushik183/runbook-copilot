@@ -1,0 +1,17 @@
+# Keep secrets, local state and junk out of the image.
+# Secrets are passed at runtime with env_file / --env-file instead.
+.env
+.git
+.gitignore
+.vscode
+.DS_Store
+**/__pycache__
+**/*.pyc
+data/
+uploads/
+graphify-out/
+Dockerfile
+docker-compose.yml
+.dockerignore
+render.yaml
+docs/

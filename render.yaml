@@ -1,0 +1,36 @@
+# Render Blueprint: describes the Render service in code.
+# Deploy: https://render.com/deploy?repo=https://github.com/kaushik183/runbook-copilot
+# (or Render Dashboard -> New -> Blueprint -> pick this repo). Render builds the Dockerfile,
+# injects PORT, serves the app over HTTPS at https://<name>.onrender.com, and redeploys on every push to main.
+services:
+  - type: web
+    name: runbook-copilot
+    runtime: docker
+    plan: free # free = sleeps after ~15 min idle and has no persistent disk (see README section 9b)
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # sync: false -> Render asks you to paste the value in the dashboard; it is never stored in git.
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      # Must match the index/namespace you ingested into with data_ingestion.py.
+      - key: PINECONE_INDEX_NAME
+        value: runbook-copilot
+      - key: PINECONE_NAMESPACE
+        value: incident-runbooks
+      - key: OPENAI_MODEL
+        value: gpt-5-mini
+      - key: EMBEDDING_MODEL
+        value: text-embedding-3-large
+      - key: EMBEDDING_DIMENSION
+        value: "3072"
+    # Paid plans only: uncomment to keep SQLite memory/audit across deploys and restarts.
+    # disk:
+    #   name: runbook-data
+    #   mountPath: /app/data
+    #   sizeGB: 1

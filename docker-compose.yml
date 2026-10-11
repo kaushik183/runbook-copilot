@@ -1,0 +1,20 @@
+# Start:   docker compose up -d --build
+# Logs:    docker compose logs -f
+# Stop:    docker compose down          (volumes, i.e. memory + uploads, are kept)
+services:
+  app:
+    build: .
+    image: runbook-copilot
+    container_name: runbook-copilot
+    env_file: .env # API keys etc. are read from .env on the host, never baked into the image
+    ports:
+      - "8000:8000" # host:container -> open http://<server-ip>:8000
+    volumes:
+      # Named volumes keep SQLite memory/audit DBs and uploaded runbooks across rebuilds.
+      - runbook_data:/app/data
+      - runbook_uploads:/app/uploads
+    restart: unless-stopped # come back up automatically after a crash or server reboot
+
+volumes:
+  runbook_data:
+  runbook_uploads:

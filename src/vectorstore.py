@@ -1,3 +1,10 @@
+"""
+Single source of truth for embeddings + Pinecone index + namespace.
+
+Both ingestion (writing vectors) and retrieval (reading vectors) go through this file,
+so they can never disagree about which model, dimension, index or namespace to use.
+"""
+
 from functools import lru_cache
 from pinecone import Pinecone, ServerlessSpec
 from langchain_openai import OpenAIEmbeddings
@@ -62,6 +69,7 @@ def get_vector_store():
     )
 
 
+# Retriever = "give me the top_k chunks most similar to this text". Used by self_rag.retrieve_internal.
 def get_retriever():
     s = get_settings()
     return get_vector_store().as_retriever(search_kwargs={"k": s.top_k})

@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# runbook-copilot local state (SQLite memory/audit DBs, uploaded runbooks)
+data/
+uploads/
+.DS_Store
